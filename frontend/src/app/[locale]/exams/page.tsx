@@ -312,29 +312,31 @@ export default function ExamsPage() {
   };
 
   const cardStyle = {
-    background: "#111827",
-    border: "1px solid #263244",
-    borderRadius: "16px",
-    padding: "22px",
+    background: "linear-gradient(145deg, rgba(19, 27, 51, 0.96), rgba(12, 18, 36, 0.96))",
+    border: "1px solid rgba(139, 92, 246, 0.24)",
+    borderRadius: "20px",
+    padding: "24px",
+    boxShadow: "0 18px 50px rgba(0, 0, 0, 0.18)",
   };
 
   const inputStyle = {
     width: "100%",
-    background: "#0b1220",
-    border: "1px solid #344155",
-    borderRadius: "10px",
-    padding: "12px",
+    background: "#0a1122",
+    border: "1px solid #344366",
+    borderRadius: "12px",
+    padding: "13px 14px",
     color: "white",
     outline: "none",
+    transition: "border-color 160ms ease, box-shadow 160ms ease",
   };
 
   const primaryButtonStyle = {
     width: "100%",
     marginTop: "20px",
-    padding: "15px",
-    borderRadius: "12px",
-    border: "none",
-    background: "linear-gradient(90deg, #7c3aed, #0891b2)",
+    padding: "15px 20px",
+    borderRadius: "13px",
+    border: "1px solid rgba(196, 181, 253, 0.25)",
+    background: "linear-gradient(105deg, #6d3ce8, #2563eb 58%, #0891b2)",
     color: "white",
     fontSize: "15px",
     fontWeight: 700,
@@ -398,16 +400,17 @@ export default function ExamsPage() {
   return (
     <main
       dir={isFa ? "rtl" : "ltr"}
+      className="exam-studio-page"
       style={{
         minHeight: "100vh",
-        background: "#080e1b",
+        background: "radial-gradient(ellipse at 82% 0%, rgba(91, 33, 182, 0.18), transparent 38%), #070b18",
         color: "#f8fafc",
-        padding: "32px",
+        padding: "36px 28px 64px",
         fontFamily: "inherit",
       }}
     >
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        <header style={{ marginBottom: "32px" }}>
+      <div className="exam-studio-content" style={{ maxWidth: "1180px", margin: "0 auto" }}>
+        <header className="exam-studio-header" style={{ marginBottom: "28px" }}>
           <div
             style={{
               color: "#a78bfa",
@@ -431,7 +434,21 @@ export default function ExamsPage() {
           </p>
         </header>
 
+        <section className="exam-studio-intro">
+          <div className="exam-studio-intro-copy">
+            <span className="exam-studio-eyebrow">{isFa ? "فضای اختصاصی طراحی آزمون" : "YOUR PERSONAL EXAM WORKSPACE"}</span>
+            <h2>{isFa ? "دانسته‌هایت را به چالش بکش." : "Turn your notes into a challenge."}</h2>
+            <p>{isFa ? "جزوه را وارد کن، آزمونت را تنظیم کن و بعد از پاسخ‌گویی، عملکردت را بررسی کن." : "Add your study material, customize the exam, then review your performance."}</p>
+          </div>
+          <div className="exam-studio-steps">
+            <div><span>01</span><strong>{isFa ? "بارگذاری منبع" : "Add source"}</strong></div>
+            <div><span>02</span><strong>{isFa ? "تنظیم آزمون" : "Configure"}</strong></div>
+            <div><span>03</span><strong>{isFa ? "تحلیل نتیجه" : "Review results"}</strong></div>
+          </div>
+        </section>
+
         <div
+          className="exam-studio-form-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
