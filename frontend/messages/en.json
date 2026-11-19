@@ -1,0 +1,64 @@
+
+{
+  "Common": {
+    "brand": "NABZ",
+    "dashboard": "Dashboard",
+    "study": "Study",
+    "analytics": "Analytics",
+    "planner": "Planner",
+    "settings": "Settings",
+    "welcome": "Welcome back",
+    "today": "Today",
+    "studyTime": "Study Time",
+    "sessions": "Study Sessions"
+  },
+  "Dashboard": {
+    "workspace": "Workspace",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "subjects": "My Subjects",
+      "sessions": "Study Sessions",
+      "planner": "Study Planner",
+      "exams": "AI Exams"
+    },
+    "aiTitle": "NABZ AI",
+    "aiDescription": "Your personal learning companion.",
+    "eyebrow": "YOUR LEARNING SPACE",
+    "title": "Welcome to NABZ",
+    "subtitle": "Every great achievement starts with one focused session.",
+    "aiEnvironment": "AI Learning Environment",
+    "journey": "YOUR JOURNEY STARTS HERE",
+    "headline": "Learn smarter. Understand deeper. Grow stronger.",
+    "description": "NABZ brings your study data, intelligent planning and AI learning tools together in one place.",
+    "start": "Start Studying",
+    "overview": "Your Overview",
+    "statistics": "Study statistics",
+    "stats": {
+      "studyTime": "Study Time",
+      "studyTimeDetail": "Total focused time",
+      "sessions": "Study Sessions",
+      "sessionsDetail": "Sessions completed",
+      "score": "Learning Score",
+      "scoreDetail": "Your learning quality",
+      "streak": "Current Streak",
+      "streakDetail": "Keep your momentum",
+      "days": "days"
+    },
+    "explore": "Explore NABZ",
+    "features": {
+      "planner": {
+        "title": "AI Study Planner",
+        "description": "Build a smarter study plan based on your goals."
+      },
+      "analyzer": {
+        "title": "Study Analyzer",
+        "description": "Understand the quality of your learning sessions."
+      },
+      "exams": {
+        "title": "AI Exam Generator",
+        "description": "Test your knowledge with intelligent quizzes."
+      }
+    },
+    "footer": "NABZ © 2026 — THE PULSE OF LEARNING"
+  }
+}

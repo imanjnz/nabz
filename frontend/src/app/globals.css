@@ -1,0 +1,63 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #080d1b;
+  color: #f8fafc;
+  font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+/* NABZ Heartbeat Animation */
+.heartbeat-glow {
+  animation: heartbeatPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes heartbeatPulse {
+  0%, 100% {
+    opacity: 0.35;
+    stroke-width: 3px;
+  }
+
+  10% {
+    opacity: 0.95;
+    stroke-width: 6px;
+  }
+
+  20% {
+    opacity: 0.4;
+    stroke-width: 3px;
+  }
+
+  30% {
+    opacity: 1;
+    stroke-width: 7px;
+  }
+
+  45% {
+    opacity: 0.4;
+    stroke-width: 3px;
+  }
+}
