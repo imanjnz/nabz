@@ -33,6 +33,9 @@ export default function AnalyticsPage() {
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [aiInsights, setAiInsights] = useState<{headline?: string; insights?: {title:string;description:string;type?:string}[]; strengths?:string[]; improvements?:string[]; next_steps?:string[]} | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   useEffect(() => {
     try {
@@ -512,6 +515,45 @@ export default function AnalyticsPage() {
 
   const recommendations = getRecommendations();
 
+  const requestAIAnalysis = async () => {
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/ai/analytics`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          summary: {
+            today_seconds: todayDuration,
+            current_week_seconds: weekDuration,
+            previous_week_seconds: previousWeekDuration,
+            all_time_seconds: totalDuration,
+            average_session_seconds: averageDuration,
+            active_days_this_week: activeDays,
+            consistency_percentage: consistencyPercentage,
+            best_day: bestDay?.name || null,
+          },
+          sessions: validSessions.slice(-150),
+          subjects: subjectStats.map((subject) => ({
+            id: subject.id,
+            name: subject.name,
+            total_seconds: subject.duration,
+            this_week_seconds: subject.currentDuration,
+            previous_period_seconds: subject.previousDuration,
+            target_hours: subject.targetHours,
+          })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "AI analysis failed.");
+      setAiInsights(data);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : (isFa ? "خطا در دریافت تحلیل هوشمند." : "Could not load AI insights."));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (!loaded) {
     return (
       <main className="min-h-screen bg-[#080d1a] p-10 text-white">
@@ -555,6 +597,31 @@ export default function AnalyticsPage() {
             {isFa ? "شروع مطالعه ↗" : "Start Studying ↗"}
           </Link>
         </header>
+        
+        {/* GPT-powered study insights */}
+        <section className="mb-8 rounded-3xl border border-violet-400/20 bg-gradient-to-br from-[#171d3b] via-[#121d35] to-[#102b3c] p-6 md:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold tracking-wider text-violet-300">NABZ AI ANALYST</p>
+              <h2 className="text-xl font-bold">{isFa ? "تحلیل هوشمند عملکرد با GPT" : "GPT Study Performance Analysis"}</h2>
+              <p className="mt-2 text-sm text-slate-400">{isFa ? "آمار واقعی مطالعه‌ات را برای دریافت بینش و پیشنهادهای هوشمند تحلیل کن." : "Analyze your actual study statistics for AI-powered insights and recommendations."}</p>
+            </div>
+            <button onClick={requestAIAnalysis} disabled={aiLoading || validSessions.length === 0} className="rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-5 py-3 text-sm font-semibold disabled:opacity-50">
+              {aiLoading ? (isFa ? "در حال تحلیل..." : "Analyzing...") : (isFa ? "تحلیل با GPT" : "Analyze with GPT")}
+            </button>
+          </div>
+          {aiError && <p className="mt-4 rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-sm text-red-200">{aiError}</p>}
+          {aiInsights && (
+            <div className="mt-6 space-y-5">
+              {aiInsights.headline && <p className="text-base font-semibold text-cyan-200">{aiInsights.headline}</p>}
+              {Array.isArray(aiInsights.insights) && <div className="grid gap-3 md:grid-cols-2">{aiInsights.insights.map((item, index) => <article key={index} className="rounded-2xl border border-white/10 bg-black/10 p-4"><h3 className="font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-7 text-slate-300">{item.description}</p></article>)}</div>}
+              {Array.isArray(aiInsights.strengths) && aiInsights.strengths.length > 0 && <div><h3 className="mb-2 font-semibold text-emerald-300">{isFa ? "نقاط قوت" : "Strengths"}</h3><ul className="list-inside list-disc space-y-1 text-sm text-slate-300">{aiInsights.strengths.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
+              {Array.isArray(aiInsights.improvements) && aiInsights.improvements.length > 0 && <div><h3 className="mb-2 font-semibold text-amber-300">{isFa ? "زمینه‌های بهبود" : "Areas to improve"}</h3><ul className="list-inside list-disc space-y-1 text-sm text-slate-300">{aiInsights.improvements.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
+              {Array.isArray(aiInsights.next_steps) && aiInsights.next_steps.length > 0 && <div><h3 className="mb-2 font-semibold text-cyan-300">{isFa ? "قدم‌های بعدی" : "Next steps"}</h3><ul className="list-inside list-disc space-y-1 text-sm text-slate-300">{aiInsights.next_steps.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
+            </div>
+          )}
+        </section>
+
 
         {/* Overview */}
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

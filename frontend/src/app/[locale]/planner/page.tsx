@@ -270,159 +270,60 @@ return `${remaining} ${isFa ? "دقیقه" : "min"}`;
 return `${hours}h ${remaining}m`;
 };
 
-// Initial smart plan generation.
-const generateSmartPlan = () => {
+// AI-powered weekly plan generation.
+const [aiPlanning, setAiPlanning] = useState(false);
+
+const generateSmartPlan = async () => {
 if (subjects.length === 0) {
-setMessage(
-isFa
-? "ابتدا حداقل یک درس اضافه کن."
-: "Add at least one subject first."
-);
+setMessage(isFa ? "ابتدا حداقل یک درس اضافه کن." : "Add at least one subject first.");
 return;
 }
-
-const currentDay = getLocalDate(new Date());
-
-const remainingTargets = subjects.map((subject) => {
-const studiedSeconds = sessions
-.filter(
-(session) => session.subjectId === subject.id
-)
-.reduce(
-(total, session) => total + session.duration,
-0
-);
-
-const plannedMinutes = plans
-.filter(
-(plan) =>
-plan.subjectId === subject.id &&
-!plan.completed &&
-plan.date >= currentDay
-)
-.reduce(
-(total, plan) => total + plan.duration,
-0
-);
-
-const remainingSeconds =
-subject.targetHours * 3600 -
-studiedSeconds -
-plannedMinutes * 60;
-
-return {
-...subject,
-remainingMinutes: Math.max(
-0,
-Math.ceil(remainingSeconds / 60)
-),
-};
+setAiPlanning(true);
+setMessage("");
+try {
+const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/ai/planner`, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+subjects,
+recent_sessions: sessions.slice(-120),
+existing_plans: plans.filter((plan) => !plan.completed),
+availability,
+start_date: getLocalDate(new Date()),
+days: 7,
+preferences: isFa ? "پیشنهادها را به فارسی و واقع‌بینانه ارائه کن." : "Keep recommendations realistic."
+}),
 });
-
-if (
-remainingTargets.every(
-(subject) => subject.remainingMinutes === 0
-)
-) {
-setMessage(
-isFa
-? "اهداف فعلی درس‌ها تکمیل شده‌اند."
-: "All subject targets are currently covered."
-);
-return;
-}
-
-const newPlans: Plan[] = [];
-
-for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-const currentDate = addDays(currentDay, dayOffset);
-
-const dayId = new Date(
-`${currentDate}T12:00:00`
-).getDay();
-
-const dailyCapacity = availability[dayId] ?? 0;
-
-const existingMinutes = plans
-.filter(
-(plan) =>
-plan.date === currentDate &&
-!plan.completed
-)
-.reduce(
-(total, plan) => total + plan.duration,
-0
-);
-
-let availableMinutes = Math.max(
-0,
-dailyCapacity - existingMinutes
-);
-
-while (availableMinutes >= 25) {
-const candidates = remainingTargets
-.filter(
-(subject) => subject.remainingMinutes >= 25
-)
-.sort(
-(a, b) =>
-b.remainingMinutes - a.remainingMinutes
-);
-
-if (candidates.length === 0) break;
-
-const selected = candidates[0];
-
-const blockMinutes = Math.min(
-60,
-availableMinutes,
-selected.remainingMinutes
-);
-
-const newPlan: Plan = {
+const data = await response.json();
+if (!response.ok) throw new Error(data.detail || "AI planner request failed.");
+const generated = Array.isArray(data.plans) ? data.plans : [];
+const newPlans: Plan[] = generated.map((item: { title?: string; subjectId?: string; date?: string; duration?: number }) => ({
 id: crypto.randomUUID(),
-title: isFa
-? `مطالعه ${selected.name}`
-: `Study ${selected.name}`,
-subjectId: selected.id,
-date: currentDate,
-duration: blockMinutes,
+title: String(item.title || (isFa ? "مطالعه" : "Study session")),
+subjectId: String(item.subjectId || ""),
+date: String(item.date || ""),
+duration: Number(item.duration || 0),
 completed: false,
 createdAt: new Date().toISOString(),
-};
-
-newPlans.push(newPlan);
-
-selected.remainingMinutes -= blockMinutes;
-availableMinutes -= blockMinutes;
+})).filter((plan: Plan) =>
+subjects.some((subject) => subject.id === plan.subjectId) &&
+/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.date) &&
+plan.date >= getLocalDate(new Date()) &&
+plan.date <= addDays(getLocalDate(new Date()), 6) &&
+Number.isFinite(plan.duration) && plan.duration >= 15 && plan.duration <= 180
+);
+if (!newPlans.length) throw new Error(isFa ? "هوش مصنوعی برنامه معتبر تولید نکرد. دوباره تلاش کن." : "The AI did not return a valid plan. Try again.");
+setPlans((previous) => [...previous, ...newPlans].sort((a, b) => a.date.localeCompare(b.date)));
+const totalGenerated = newPlans.reduce((total, plan) => total + plan.duration, 0);
+const overview = typeof data.overview === "string" ? data.overview : "";
+setMessage(isFa
+? `${newPlans.length} برنامه با مجموع ${formatMinutes(totalGenerated)} ساخته شد. ${overview}`
+: `${newPlans.length} AI-generated tasks created (${formatMinutes(totalGenerated)}). ${overview}`);
+} catch (error) {
+setMessage(error instanceof Error ? error.message : (isFa ? "ارتباط با سرویس هوش مصنوعی برقرار نشد." : "Could not connect to the AI service."));
+} finally {
+setAiPlanning(false);
 }
-}
-
-if (newPlans.length === 0) {
-setMessage(
-isFa
-? "با ظرفیت فعلی زمان آزاد، برنامه جدیدی قابل ساخت نیست."
-: "No new plans could be generated with the current availability."
-);
-return;
-}
-
-setPlans((previous) =>
-[...previous, ...newPlans].sort((a, b) =>
-a.date.localeCompare(b.date)
-)
-);
-
-const totalGenerated = newPlans.reduce(
-(total, plan) => total + plan.duration,
-0
-);
-
-setMessage(
-isFa
-? `${newPlans.length} برنامه جدید با مجموع ${formatMinutes(totalGenerated)} ساخته شد.`
-: `${newPlans.length} new tasks created (${formatMinutes(totalGenerated)}).`
-);
 };
 
 // Smart rescheduling of overdue plans.
@@ -711,10 +612,10 @@ NABZ SMART ENGINE
 <button
 type="button"
 onClick={generateSmartPlan}
-disabled={subjects.length === 0}
+disabled={subjects.length === 0 || aiPlanning}
 className="rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-7 py-4 font-bold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
 >
-✧ {isFa ? "تولید برنامه هوشمند" : "Generate My Plan"}
+{aiPlanning ? (isFa ? "در حال طراحی برنامه با GPT..." : "GPT is building your plan...") : `✧ ${isFa ? "تولید برنامه هوشمند" : "Generate My Plan"}` }
 </button>
 </div>
 
