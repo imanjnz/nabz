@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Build output
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Local tooling
+.DS_Store
+.vscode/
+.idea/
+*.log

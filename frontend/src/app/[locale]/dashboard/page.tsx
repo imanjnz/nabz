@@ -780,6 +780,24 @@ export default function Dashboard() {
             </div>
           </section>
 
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link href={`/${locale}/tutor`} className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-5 transition hover:border-cyan-300/50">
+              <p className="text-xs font-semibold tracking-widest text-cyan-300">NABZ AI TUTOR</p>
+              <h3 className="mt-2 text-lg font-bold">{isFa ? "معلم هوشمند" : "AI Tutor"}</h3>
+              <p className="mt-2 text-sm text-slate-400">{isFa ? "پرسش و پاسخ متنی و صوتی با GPT" : "Ask GPT questions by text or voice"}</p>
+            </Link>
+            <Link href={`/${locale}/learning-dna`} className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.06] p-5 transition hover:border-violet-300/50">
+              <p className="text-xs font-semibold tracking-widest text-violet-300">LEARNING DNA</p>
+              <h3 className="mt-2 text-lg font-bold">{isFa ? "شناخت الگوی یادگیری" : "Learning DNA"}</h3>
+              <p className="mt-2 text-sm text-slate-400">{isFa ? "تحلیل هوشمند عادت‌ها و روند مطالعه" : "AI insights about study patterns"}</p>
+            </Link>
+            <Link href={`/${locale}/analytics`} className="rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.06] p-5 transition hover:border-emerald-300/50">
+              <p className="text-xs font-semibold tracking-widest text-emerald-300">AI ANALYTICS</p>
+              <h3 className="mt-2 text-lg font-bold">{isFa ? "تحلیل عملکرد با GPT" : "GPT Performance Analysis"}</h3>
+              <p className="mt-2 text-sm text-slate-400">{isFa ? "بینش‌های شخصی از داده‌های واقعی مطالعه" : "Insights from your actual study data"}</p>
+            </Link>
+          </section>
+
           <footer className="border-t border-white/10 py-6 text-center">
             <p className="text-[10px] tracking-[.2em] text-slate-600">
               NABZ — THE PULSE OF LEARNING

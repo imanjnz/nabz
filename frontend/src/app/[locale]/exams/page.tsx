@@ -92,6 +92,27 @@ export default function ExamsPage() {
   >({});
 
   const [error, setError] = useState("");
+  const [mistakeHelp, setMistakeHelp] = useState<Record<string, { loading: boolean; data?: any; error?: string }>>({});
+  const explainMistake = async (question: ExamQuestion, item: QuestionResult) => {
+    setMistakeHelp((old) => ({ ...old, [question.id]: { loading: true } }));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai/explain-mistake`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: question.question,
+          student_answer: item.user_answer || "",
+          correct_answer: item.correct_answer || "",
+          explanation: item.explanation || "",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Could not explain this answer.");
+      setMistakeHelp((old) => ({ ...old, [question.id]: { loading: false, data } }));
+    } catch (err) {
+      setMistakeHelp((old) => ({ ...old, [question.id]: { loading: false, error: err instanceof Error ? err.message : "Request failed." } }));
+    }
+  };
 
   const handleFileChange = (selectedFile?: File) => {
     if (!selectedFile) return;
@@ -846,6 +867,29 @@ export default function ExamsPage() {
                           <p style={{ color: "#cbd5e1", marginTop: "8px" }}>
                             {questionResult.explanation}
                           </p>
+                        )}
+
+                        {result && questionResult.status === "incorrect" && questionResult.correct_answer && (
+                          <div style={{ marginTop: "14px" }}>
+                            <button
+                              type="button"
+                              disabled={mistakeHelp[question.id]?.loading}
+                              onClick={() => void explainMistake(question, questionResult)}
+                              style={{ border: "1px solid #22d3ee55", color: "#67e8f9", background: "#164e6333", borderRadius: "9px", padding: "9px 13px", fontSize: "13px", cursor: "pointer" }}
+                            >
+                              {mistakeHelp[question.id]?.loading ? (isFa ? "در حال تحلیل پاسخ..." : "Analyzing answer...") : (isFa ? "✦ چرا اشتباه کردم؟ (تحلیل GPT)" : "✦ Explain my mistake (GPT)")}
+                            </button>
+                            {mistakeHelp[question.id]?.error && <p style={{ color: "#fca5a5", marginTop: "8px", fontSize: "12px" }}>{mistakeHelp[question.id]?.error}</p>}
+                            {mistakeHelp[question.id]?.data && (
+                              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "10px", border: "1px solid #22d3ee33", background: "#082f4933", lineHeight: 2 }}>
+                                <p><strong style={{ color: "#67e8f9" }}>{isFa ? "اشکال پاسخ تو" : "What went wrong"}</strong><br />{mistakeHelp[question.id].data.what_went_wrong}</p>
+                                <p style={{ marginTop: "10px" }}><strong style={{ color: "#86efac" }}>{isFa ? "روش درست فکر کردن" : "Correct reasoning"}</strong><br />{mistakeHelp[question.id].data.correct_reasoning}</p>
+                                <p style={{ marginTop: "10px" }}><strong style={{ color: "#c4b5fd" }}>{isFa ? "مفهوم کلیدی" : "Key concept"}</strong><br />{mistakeHelp[question.id].data.key_concept}</p>
+                                <p style={{ marginTop: "10px" }}><strong>{isFa ? "تمرین مشابه" : "Practice question"}</strong><br />{mistakeHelp[question.id].data.similar_practice_question}</p>
+                                <p style={{ marginTop: "6px" }}><strong>{isFa ? "پاسخ تمرین" : "Practice answer"}</strong><br />{mistakeHelp[question.id].data.practice_answer}</p>
+                              </div>
+                            )}
+                          </div>
                         )}
 
                         {evaluation && (

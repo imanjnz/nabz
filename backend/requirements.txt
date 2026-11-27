@@ -4,3 +4,10 @@ sqlalchemy
 psycopg[binary]
 pydantic-settings
 python-dotenv
+openai>=1.68.0
+pymupdf
+pytesseract
+Pillow
+pypdf
+python-docx
+python-multipart
