@@ -307,7 +307,7 @@ completed: false,
 createdAt: new Date().toISOString(),
 })).filter((plan: Plan) =>
 subjects.some((subject) => subject.id === plan.subjectId) &&
-/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.date) &&
+/^\d{4}-\d{2}-\d{2}$/.test(plan.date) &&
 plan.date >= getLocalDate(new Date()) &&
 plan.date <= addDays(getLocalDate(new Date()), 6) &&
 Number.isFinite(plan.duration) && plan.duration >= 15 && plan.duration <= 180
