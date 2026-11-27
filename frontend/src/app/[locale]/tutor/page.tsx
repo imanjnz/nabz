@@ -26,10 +26,10 @@ export default function TutorPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API}/api/ai/tutor`, {
+      const voiceMode = Boolean(spokenText);\n      const conversation_context = messages.slice(-8).map((item) => `${item.role}: ${item.text}`).join("\\n");\n      const response = await fetch(`${API}/api/ai/${voiceMode ? "voice-tutor" : "tutor"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: prompt, subject, context }),
+        body: JSON.stringify(voiceMode ? { text: prompt, conversation_context } : { question: prompt, subject, context }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || "Tutor request failed.");
