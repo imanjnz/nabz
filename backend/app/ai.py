@@ -1,5 +1,6 @@
 import os
-from typing import Any, Literal
+from typing import Any
+from datetime import date, timedelta
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -71,12 +72,46 @@ async def create_smart_plan(request: PlannerRequest):
     )
     data = await ai.json(system=system, user=request.model_dump_json())
     plans = data.get("plans", []) if isinstance(data, dict) else []
+    if not isinstance(plans, list):
+        raise HTTPException(status_code=502, detail="AI returned an invalid plan list.")
     allowed_ids = {str(s.get("id")) for s in request.subjects}
+    try:
+        first_day = date.fromisoformat(request.start_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="start_date must use YYYY-MM-DD.") from exc
+
+    # Existing unfinished plans consume the user's daily capacity.
+    used_by_date: dict[str, int] = {}
+    for existing in request.existing_plans:
+        existing_date = str(existing.get("date", ""))
+        try:
+            existing_minutes = int(existing.get("duration", 0))
+        except (TypeError, ValueError):
+            continue
+        if existing_date and existing_minutes > 0:
+            used_by_date[existing_date] = used_by_date.get(existing_date, 0) + existing_minutes
+
     for plan in plans:
+        if not isinstance(plan, dict):
+            raise HTTPException(status_code=502, detail="AI returned an invalid plan item.")
         if str(plan.get("subjectId")) not in allowed_ids:
             raise HTTPException(status_code=502, detail="AI returned an unknown subject.")
-        if not 15 <= int(plan.get("duration", 0)) <= 180:
+        try:
+            duration = int(plan.get("duration", 0))
+            plan_date = date.fromisoformat(str(plan.get("date", "")))
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(status_code=502, detail="AI returned an invalid date or duration.") from exc
+        if not 15 <= duration <= 180:
             raise HTTPException(status_code=502, detail="AI returned an invalid study duration.")
+        if not first_day <= plan_date < first_day + timedelta(days=request.days):
+            raise HTTPException(status_code=502, detail="AI returned a date outside the requested planning period.")
+        day_key = str((plan_date.weekday() + 1) % 7)  # JS weekday: Sunday=0
+        capacity = int(request.availability.get(day_key, 0))
+        date_key = plan_date.isoformat()
+        used = used_by_date.get(date_key, 0) + duration
+        if used > capacity:
+            raise HTTPException(status_code=502, detail="AI exceeded the available study time for a day.")
+        used_by_date[date_key] = used
     return data
 
 
